@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد شخصی</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Header -->
+    <header>
+      <div class="nav-date" id="nav-date-display">2026/8/27</div>
+      <nav>
+        <button data-target="page-today" class="active">امروز</button>
+        <button data-target="page-weekly">هفته</button>
+        <button data-target="page-pomodoro">پومودورو</button>
+        <button data-target="page-settings">تنظیمات</button>
+      </nav>
+    </header>
+
+    <!-- Today Page -->
+    <main id="page-today" class="page active">
+      <div class="card-container">
+        <h3>تایم‌لاین روزانه</h3>
+        <p>محتوای تایم‌لاین...</p>
+      </div>
+
+      <div class="card-container">
+        <h3>گالری تصاویر (Gallery)</h3>
+        <p>تصاویر امروز...</p>
+      </div>
+
+      <div class="card-container">
+        <h3>بازتاب روزانه (Daily Reflection)</h3>
+        <textarea style="width:100%; height:80px; padding:0.5rem;" placeholder="بازتاب امروز خود را بنویسید..."></textarea>
+      </div>
+
+      <div class="card-container">
+        <h3>یادداشت صوتی / لینک</h3>
+        <div class="input-group">
+          <input type="text" id="voice-link-input" placeholder="لینک یا آدرس را وارد کنید و Enter بزنید...">
+        </div>
+      </div>
+    </main>
+
+    <!-- Weekly Page -->
+    <main id="page-weekly" class="page">
+      <div class="card-container">
+        <div class="chart-header">
+          <h3>جدول عملکرد هفتگی</h3>
+          <div id="dominant-mood-display"></div>
+        </div>
+        <div class="weekly-table-wrapper">
+          <table class="weekly-table">
+            <thead>
+              <tr>
+                <th>روز</th>
+                <th>تیک‌ها</th>
+                <th>عادت‌ها</th>
+                <th>خلق</th>
+                <th>عکس</th>
+              </tr>
+            </thead>
+            <tbody id="weekly-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Logical Chart Analytics -->
+      <div class="card-container chart-card">
+        <div class="chart-header">
+          <h3>روند خلق، انرژی و عادت‌های هفتگی</h3>
+          <span class="chart-summary">تحلیل کلی: عملکرد باثبات در طول هفته</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="weeklyEnergyChart"></canvas>
+        </div>
+      </div>
+    </main>
+
+    <!-- Pomodoro Page -->
+    <main id="page-pomodoro" class="page">
+      <div class="card-container" style="text-align: center;">
+        <h2>تایمر پومودورو</h2>
+        <h1 id="timer-display" style="font-size: 3.5rem; margin: 1.5rem 0; color: var(--primary-color);">25:00</h1>
+        
+        <div class="pomodoro-controls">
+          <button class="btn">۲۵ دقیقه</button>
+          <button class="btn">۱۵ دقیقه</button>
+          <button class="btn">۵ دقیقه</button>
+        </div>
+
+        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+
+        <div class="custom-timer-input" style="justify-content: center;">
+          <label for="custom-timer-min">تایمر دلخواه (دقیقه):</label>
+          <input type="number" id="custom-timer-min" min="1" max="180" value="45">
+          <button id="start-custom-timer" class="btn btn-secondary">شروع تایمر سفارشی</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Page -->
+    <main id="page-settings" class="page">
+      <div class="card-container">
+        <h3>تنظیمات پس‌زمینه</h3>
+        <p>تصویر دلخواه خود را برای پس‌زمینه برنامه انتخاب کنید:</p>
+        <input type="file" id="bg-file-input" accept="image/*">
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
+
