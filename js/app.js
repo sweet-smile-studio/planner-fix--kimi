@@ -1,49 +1,48 @@
-// App State & Data Store
+// ==========================================================================
+// Application State
+// ==========================================================================
 const state = {
   currentDate: new Date(),
-  bgImage: localStorage.getItem('bg_image') || '',
-  todayData: {
-    gallery: [],
+  bgImage: localStorage.getItem('app_bg_image') || '',
+  todayData: JSON.parse(localStorage.getItem('today_data')) || {
     reflection: '',
     voiceLink: '',
-    mood: '😊',
-    energy: 4,
-    habits: {}
+    ticksCount: 0
   },
-  weeklyData: [
-    { day: 'شنبه', ticks: 4, habits: 3, mood: '😊', energy: 4, image: true },
-    { day: 'یکشنبه', ticks: 5, habits: 4, mood: '🌟', energy: 5, image: false },
-    { day: 'دوشنبه', ticks: 2, habits: 2, mood: '😐', energy: 3, image: true },
-    { day: 'سه‌شنبه', ticks: 6, habits: 5, mood: '😊', energy: 4, image: false },
-    { day: 'چهارشنبه', ticks: 3, habits: 3, mood: '😔', energy: 2, image: false },
-    { day: 'پنج‌شنبه', ticks: 7, habits: 5, mood: '🌟', energy: 5, image: true },
-    { day: 'جمعه', ticks: 5, habits: 4, mood: '😊', energy: 4, image: false }
+  weeklyData: JSON.parse(localStorage.getItem('weekly_data')) || [
+    { day: 'شنبه', ticks: 4, habits: 3, mood: '😊', energy: 4, hasPhoto: true },
+    { day: 'یکشنبه', ticks: 5, habits: 4, mood: '🌟', energy: 5, hasPhoto: false },
+    { day: 'دوشنبه', ticks: 2, habits: 2, mood: '😐', energy: 3, hasPhoto: true },
+    { day: 'سه‌شنبه', ticks: 6, habits: 5, mood: '😊', energy: 4, hasPhoto: false },
+    { day: 'چهارشنبه', ticks: 3, habits: 3, mood: '😔', energy: 2, hasPhoto: false },
+    { day: 'پنج‌شنبه', ticks: 7, habits: 5, mood: '🌟', energy: 5, hasPhoto: true },
+    { day: 'جمعه', ticks: 5, habits: 4, mood: '😊', energy: 4, hasPhoto: false }
   ]
 };
 
+// ==========================================================================
+// Initialization
+// ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  initApp();
+  initDateDisplay();
+  initNavigation();
+  initVoiceInputFix();
+  initWeeklyTableAndMood();
+  initLogicalCharts();
+  initCustomPomodoro();
+  initSettingsBackground();
 });
 
-function initApp() {
-  renderDate();
-  setupNavigation();
-  setupVoiceInput();
-  setupPomodoro();
-  setupSettings();
-  applySavedBackground();
-  renderWeeklyView();
-  initCharts();
-}
-
-// 1. Navigation & Header Fixes
-function renderDate() {
+// 1. Header Date Format (e.g. 2026/8/27)
+function initDateDisplay() {
   const d = state.currentDate;
-  const formattedDate = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-  document.getElementById('nav-date-display').textContent = formattedDate;
+  const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+  const dateEl = document.getElementById('nav-date-display');
+  if (dateEl) dateEl.textContent = dateStr;
 }
 
-function setupNavigation() {
+// Navigation Handler
+function initNavigation() {
   const navBtns = document.querySelectorAll('nav button');
   const pages = document.querySelectorAll('.page');
 
@@ -54,38 +53,51 @@ function setupNavigation() {
       pages.forEach(p => p.classList.remove('active'));
       
       btn.classList.add('active');
-      document.getElementById(target).classList.add('active');
+      const targetPage = document.getElementById(target);
+      if (targetPage) targetPage.classList.add('active');
     });
   });
 }
 
-// 2. Today Page: Voice Link Auto Save on Enter (No Checkmark)
-function setupVoiceInput() {
+// 2. Today View: Save Voice/Link on Enter (No Checkmark)
+function initVoiceInputFix() {
   const voiceInput = document.getElementById('voice-link-input');
   if (!voiceInput) return;
+
+  if (state.todayData.voiceLink) {
+    voiceInput.value = state.todayData.voiceLink;
+  }
 
   voiceInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       state.todayData.voiceLink = voiceInput.value.trim();
-      showToast('لینک با موفقیت ذخیره شد');
+      localStorage.setItem('today_data', JSON.stringify(state.todayData));
+      
+      // Flash input background to indicate saved status
+      voiceInput.style.backgroundColor = '#dcfce7';
+      setTimeout(() => { voiceInput.style.backgroundColor = ''; }, 600);
       voiceInput.blur();
     }
   });
 }
 
-// 3. Weekly Page: Calculate Dominant Mood & Sync Ticks
-function renderWeeklyView() {
+// 3. Weekly View: Sync Ticks & Calculate Dominant Mood
+function initWeeklyTableAndMood() {
   const tableBody = document.getElementById('weekly-table-body');
   if (!tableBody) return;
 
+  // Sync today's ticks into current day row (e.g. Thursday/Friday)
+  if (state.todayData.ticksCount > 0) {
+    state.weeklyData[state.weeklyData.length - 1].ticks = state.todayData.ticksCount;
+  }
+
   tableBody.innerHTML = '';
-  
-  const moodCounts = {};
-  
+  const moodFrequency = {};
+
   state.weeklyData.forEach(row => {
-    // Count Mood Frequency
-    moodCounts[row.mood] = (moodCounts[row.mood] || 0) + 1;
+    // Count mood for dominant mood analysis
+    moodFrequency[row.mood] = (moodFrequency[row.mood] || 0) + 1;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -93,55 +105,58 @@ function renderWeeklyView() {
       <td>${row.ticks}</td>
       <td>${row.habits}</td>
       <td>${row.mood}</td>
-      <td>${row.image ? '📸 دارد' : '—'}</td>
+      <td>${row.hasPhoto ? '📸' : '—'}</td>
     `;
     tableBody.appendChild(tr);
   });
 
-  // Calculate Most Frequent Mood
+  // Find Dominant Mood
   let dominantMood = '😊';
   let maxCount = 0;
-  for (const [mood, count] of Object.entries(moodCounts)) {
+  for (const [mood, count] of Object.entries(moodFrequency)) {
     if (count > maxCount) {
       maxCount = count;
       dominantMood = mood;
     }
   }
 
-  const dominantContainer = document.getElementById('dominant-mood-display');
-  if (dominantContainer) {
-    dominantContainer.innerHTML = `خلق غالب هفته: <span class="dominant-mood-badge">${dominantMood}</span>`;
+  const moodDisplay = document.getElementById('dominant-mood-display');
+  if (moodDisplay) {
+    moodDisplay.innerHTML = `خلق غالب هفته: <span class="dominant-mood-badge">${dominantMood}</span>`;
   }
 }
 
-// 4. Meaningful & Logical Chart Analytics (Chart.js Integration)
-function initCharts() {
-  const ctxEnergy = document.getElementById('weeklyEnergyChart');
-  if (!ctxEnergy) return;
+// 4. Logical & Clear Analytics Charts (Replaces Unclear Charts)
+function initLogicalCharts() {
+  const ctx = document.getElementById('weeklyChart');
+  if (!ctx) return;
 
-  const days = state.weeklyData.map(d => d.day);
-  const energyLevels = state.weeklyData.map(d => d.energy);
-  const habitCompletion = state.weeklyData.map(d => d.habits);
+  const labels = state.weeklyData.map(d => d.day);
+  const energyData = state.weeklyData.map(d => d.energy);
+  const habitsData = state.weeklyData.map(d => d.habits);
 
-  new Chart(ctxEnergy, {
+  new Chart(ctx, {
     type: 'line',
     data: {
-      labels: days,
+      labels: labels,
       datasets: [
         {
           label: 'سطح انرژی (۱ تا ۵)',
-          data: energyLevels,
+          data: energyData,
           borderColor: '#6366f1',
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          backgroundColor: 'rgba(99, 102, 241, 0.15)',
           fill: true,
-          tension: 0.3
+          tension: 0.3,
+          pointRadius: 5
         },
         {
-          label: 'عادت‌های تکمیل‌شده',
-          data: habitCompletion,
+          label: 'عادت‌های انجام‌شده',
+          data: habitsData,
           borderColor: '#10b981',
+          backgroundColor: 'transparent',
           borderDash: [5, 5],
-          fill: false
+          tension: 0.1,
+          pointRadius: 4
         }
       ]
     },
@@ -149,86 +164,105 @@ function initCharts() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'top' },
+        legend: {
+          position: 'top',
+          labels: { font: { family: 'system-ui' } }
+        },
         tooltip: {
           callbacks: {
-            footer: (items) => 'تحلیل: سطح پایداری عملکرد خوب است'
+            label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}`
           }
         }
       },
       scales: {
-        y: { beginAtZero: true, max: 6 }
+        y: {
+          min: 0,
+          max: 6,
+          ticks: { stepSize: 1 }
+        }
       }
     }
   });
 }
 
-// 5. Pomodoro Custom Timer
-function setupPomodoro() {
+// 5. Pomodoro Custom Manual Timer
+function initCustomPomodoro() {
   const startCustomBtn = document.getElementById('start-custom-timer');
   const customInput = document.getElementById('custom-timer-min');
   const timerDisplay = document.getElementById('timer-display');
 
-  if (!startCustomBtn) return;
+  if (!startCustomBtn || !timerDisplay) return;
 
+  // Preset Buttons Logic
+  const presetBtns = document.querySelectorAll('.pomodoro-preset');
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mins = parseInt(btn.dataset.time);
+      startTimer(mins * 60, timerDisplay);
+    });
+  });
+
+  // Custom Input Logic
   startCustomBtn.addEventListener('click', () => {
-    const minutes = parseInt(customInput.value);
-    if (minutes && minutes > 0) {
-      let seconds = minutes * 60;
-      updateTimerDisplay(seconds, timerDisplay);
-      
-      if (window.pomodoroInterval) clearInterval(window.pomodoroInterval);
-      
-      window.pomodoroInterval = setInterval(() => {
-        seconds--;
-        updateTimerDisplay(seconds, timerDisplay);
-        if (seconds <= 0) {
-          clearInterval(window.pomodoroInterval);
-          alert('زمان پومودورو سفارشی به پایان رسید!');
-        }
-      }, 1000);
+    const mins = parseInt(customInput.value);
+    if (mins && mins > 0) {
+      startTimer(mins * 60, timerDisplay);
+    } else {
+      alert('لطفاً یک زمان معتبر به دقیقه وارد کنید.');
     }
   });
 }
 
-function updateTimerDisplay(totalSeconds, displayEl) {
-  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-  const s = (totalSeconds % 60).toString().padStart(2, '0');
+function startTimer(totalSeconds, displayEl) {
+  if (window.pomodoroInterval) clearInterval(window.pomodoroInterval);
+
+  let secondsLeft = totalSeconds;
+  updateTimerUI(secondsLeft, displayEl);
+
+  window.pomodoroInterval = setInterval(() => {
+    secondsLeft--;
+    updateTimerUI(secondsLeft, displayEl);
+
+    if (secondsLeft <= 0) {
+      clearInterval(window.pomodoroInterval);
+      alert('زمان تایمر به پایان رسید!');
+    }
+  }, 1000);
+}
+
+function updateTimerUI(seconds, displayEl) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
   displayEl.textContent = `${m}:${s}`;
 }
 
-// 6. Settings Background Image Fix
-function setupSettings() {
+// 6. Settings Background Fix
+function initSettingsBackground() {
   const bgInput = document.getElementById('bg-file-input');
-  if (!bgInput) return;
+  
+  // Apply existing saved background
+  if (state.bgImage) {
+    applyBg(state.bgImage);
+  }
 
-  bgInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const bgDataUrl = evt.target.result;
-        localStorage.setItem('bg_image', bgDataUrl);
-        applyBackground(bgDataUrl);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-}
-
-function applySavedBackground() {
-  const savedBg = localStorage.getItem('bg_image');
-  if (savedBg) {
-    applyBackground(savedBg);
+  if (bgInput) {
+    bgInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const base64Img = evt.target.result;
+          localStorage.setItem('app_bg_image', base64Img);
+          state.bgImage = base64Img;
+          applyBg(base64Img);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   }
 }
 
-function applyBackground(url) {
-  document.body.style.backgroundImage = `url('${url}')`;
+function applyBg(imgUrl) {
+  document.body.style.backgroundImage = `url('${imgUrl}')`;
   document.body.classList.add('has-custom-bg');
-}
-
-function showToast(msg) {
-  // Simple toast placeholder
-  console.log(msg);
 }
