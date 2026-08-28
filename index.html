@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>داشبورد شخصی</title>
+  <title>پلنر شخصی</title>
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
   <div class="app-container">
-    <!-- Navigation Header -->
+    <!-- Header Navigation -->
     <header>
       <div class="nav-date" id="nav-date-display">2026/8/27</div>
       <nav>
@@ -25,19 +25,21 @@
     <main id="page-today" class="page active">
       <div class="card-container">
         <h3>تایم‌لاین روزانه</h3>
-        <p>محتوای تایم‌لاین...</p>
+        <p style="color: var(--text-muted);">فعالیت‌ها و برنامه‌های امروز...</p>
       </div>
 
       <div class="card-container">
         <h3>گالری تصاویر (Gallery)</h3>
-        <p>تصاویر امروز...</p>
+        <p style="color: var(--text-muted);">تصاویر ثبت‌شده امروز...</p>
       </div>
 
-      <div class="card-container">
+      <!-- Daily Reflection (Equal gap from gallery & timeline) -->
+      <div class="card-container daily-reflection-container">
         <h3>بازتاب روزانه (Daily Reflection)</h3>
-        <textarea style="width:100%; height:80px; padding:0.5rem;" placeholder="بازتاب امروز خود را بنویسید..."></textarea>
+        <textarea style="width:100%; height:90px; padding:0.75rem; border:1px solid var(--border-color); border-radius:8px; outline:none;" placeholder="بازتاب و حس امروزت رو بنویس..."></textarea>
       </div>
 
+      <!-- Voice / Link Input (Auto save on Enter, No checkmark) -->
       <div class="card-container">
         <h3>یادداشت صوتی / لینک</h3>
         <div class="input-group">
@@ -53,6 +55,8 @@
           <h3>جدول عملکرد هفتگی</h3>
           <div id="dominant-mood-display"></div>
         </div>
+        
+        <!-- Table with Aligned Headers Exactly Above Columns -->
         <div class="weekly-table-wrapper">
           <table class="weekly-table">
             <thead>
@@ -65,20 +69,19 @@
               </tr>
             </thead>
             <tbody id="weekly-table-body">
-              <!-- Rendered via JS -->
+              <!-- JS Populated -->
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Logical Chart Analytics -->
+      <!-- Clear & Logical Weekly Chart -->
       <div class="card-container chart-card">
         <div class="chart-header">
-          <h3>روند خلق، انرژی و عادت‌های هفتگی</h3>
-          <span class="chart-summary">تحلیل کلی: عملکرد باثبات در طول هفته</span>
+          <h3>تحلیل روند هفتگی (انرژی و عادت‌ها)</h3>
         </div>
         <div class="chart-wrapper">
-          <canvas id="weeklyEnergyChart"></canvas>
+          <canvas id="weeklyChart"></canvas>
         </div>
       </div>
     </main>
@@ -89,18 +92,18 @@
         <h2>تایمر پومودورو</h2>
         <h1 id="timer-display" style="font-size: 3.5rem; margin: 1.5rem 0; color: var(--primary-color);">25:00</h1>
         
+        <!-- Default Presets -->
         <div class="pomodoro-controls">
-          <button class="btn">۲۵ دقیقه</button>
-          <button class="btn">۱۵ دقیقه</button>
-          <button class="btn">۵ دقیقه</button>
+          <button class="btn pomodoro-preset" data-time="25">۲۵ دقیقه</button>
+          <button class="btn pomodoro-preset" data-time="15">۱۵ دقیقه</button>
+          <button class="btn pomodoro-preset" data-time="5">۵ دقیقه</button>
         </div>
 
-        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
-
-        <div class="custom-timer-input" style="justify-content: center;">
-          <label for="custom-timer-min">تایمر دلخواه (دقیقه):</label>
-          <input type="number" id="custom-timer-min" min="1" max="180" value="45">
-          <button id="start-custom-timer" class="btn btn-secondary">شروع تایمر سفارشی</button>
+        <!-- Custom Manual Timer -->
+        <div class="custom-timer-box">
+          <label for="custom-timer-min">تایمر دستی (دقیقه):</label>
+          <input type="number" id="custom-timer-min" min="1" max="180" placeholder="مثلا 40">
+          <button id="start-custom-timer" class="btn btn-secondary">شروع تایمر</button>
         </div>
       </div>
     </main>
@@ -109,7 +112,7 @@
     <main id="page-settings" class="page">
       <div class="card-container">
         <h3>تنظیمات پس‌زمینه</h3>
-        <p>تصویر دلخواه خود را برای پس‌زمینه برنامه انتخاب کنید:</p>
+        <p style="color: var(--text-muted);">انتخاب تصویر پس‌زمینه برای برنامه:</p>
         <input type="file" id="bg-file-input" accept="image/*">
       </div>
     </main>
@@ -118,4 +121,3 @@
   <script src="js/app.js"></script>
 </body>
 </html>
-
